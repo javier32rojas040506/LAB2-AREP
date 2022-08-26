@@ -7,8 +7,9 @@ import java.util.logging.Level;
 public class HttpServer {
 public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
+        Integer puerto = new Integer(System.getenv("PORT"));
         try {
-            serverSocket = new ServerSocket(35000);
+            serverSocket = new ServerSocket(puerto);
         } catch (IOException e) {
             System.err.println("Could not listen on port: 35006.");
             System.exit(1);

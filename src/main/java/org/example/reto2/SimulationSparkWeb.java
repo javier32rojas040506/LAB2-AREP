@@ -21,8 +21,8 @@ public class SimulationSparkWeb {
 
     public static void start() throws IOException {
         ServerSocket serverSocket = null;
-        //Integer puerto = new Integer(System.getenv("PORT"));
-        Integer puerto =  35000;
+        Integer puerto = new Integer(System.getenv("PORT"));
+        //Integer puerto =  35000;
         try {
             serverSocket = new ServerSocket(puerto);
             System.out.println("server sock"+ serverSocket);

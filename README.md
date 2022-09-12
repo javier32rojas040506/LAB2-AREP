@@ -82,6 +82,15 @@ el servidor responde a todos los archivos de la carpeta public
 ![](.README_images/83fce9fb.png)
 
 #### RETO 2
+se implementaron los lambdas y en la clase SimulationsSparkWebTest se publicaron los servicios
+![](.README_images/25a7cbf7.png)
+
+#### Pruebas
+![](.README_images/f13bf400.png)
+![](.README_images/5654e0bf.png)
+![](.README_images/220c79d8.png)
+![](.README_images/7c9e8ac3.png)
+![](.README_images/83fce9fb.png)
 
 ---
 ## Built With

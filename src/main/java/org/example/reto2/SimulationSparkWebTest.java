@@ -11,6 +11,26 @@ public class SimulationSparkWebTest {
             //String name = request.queryParams("name");
             return "Hello Heroku :) ";
         });
+        SimulationSparkWeb.get("/", (request, response) -> {
+            //String name = request.queryParams("name");
+            return "Hello from Server done by simutalion Spring ";
+        });
+        SimulationSparkWeb.get("/index.html", (request, response) -> {
+            //String name = request.queryParams("name");
+            return "/index.html";
+        });
+        SimulationSparkWeb.get("/eci.jpg", (request, response) -> {
+            //String name = request.queryParams("name");
+            return "/eci.jpg";
+        });
+        SimulationSparkWeb.get("/entrada.png", (request, response) -> {
+            //String name = request.queryParams("name");
+            return "/entrada.png";
+        });
+        SimulationSparkWeb.get("/index.css", (request, response) -> {
+            //String name = request.queryParams("name");
+            return "/index.css";
+        });
         //Opening the Server
         try {
             SimulationSparkWeb.start();

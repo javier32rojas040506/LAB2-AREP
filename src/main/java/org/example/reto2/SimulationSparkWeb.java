@@ -6,25 +6,17 @@ import java.net.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SimulationSparkWeb {
-    public static String URItoAttend;
-    public static SparkMethodGet actionToAttend;
 
-    //getter and setters
-    public static SparkMethodGet getActionToAttend() {
-        return actionToAttend;
+    public static Map<String,SparkMethodGet> URIstoAttend = new HashMap<String, SparkMethodGet>();
+    public static void addURIstoAttend(String uri, SparkMethodGet method) {
+        URIstoAttend.put(uri, method);
     }
-
-    public static void setActionToAttend(SparkMethodGet actionToAttend) {
-        SimulationSparkWeb.actionToAttend = actionToAttend;
-    }
-
-    public static String getURItoAttend() {
-        return URItoAttend;
-    }
-    public static void setURItoAttend(String URItoAttend) {
-        SimulationSparkWeb.URItoAttend = URItoAttend;
+    public static void setURIstoAttend(Map URIstoAttend) {
+        SimulationSparkWeb.URIstoAttend = URIstoAttend;
     }
 
     public static void start() throws IOException {
@@ -72,19 +64,29 @@ public class SimulationSparkWeb {
                         //logger.getLogger(HttpServer.class.getName().log(Level.SEVERE,null, e));
                     }
                     System.out.println("parsed path: " + path);
-                    System.out.println("Uri to attend: " + URItoAttend);
                     System.out.println("Query: " + path.getQuery());
                     firstLine = false;
                     String responseBody = "";
 
                     //end points to attend
-                    if(path.getPath().equals(URItoAttend)){
-                        SparkWebRequest request = new SparkWebRequest();
-                        SparkWebResponse response = new SparkWebResponse();
-                        responseBody = getActionToAttend().getSparkMethod(request, response);
-                        System.out.println("ResponseBody: " + responseBody);
-                        outputLine = builtOutputLine(responseBody);
+                    for (String uriInCatalog:URIstoAttend.keySet()) {
+                        if(path.getPath().equals(uriInCatalog)){
+                            SparkWebRequest request = new SparkWebRequest();
+                            SparkWebResponse response = new SparkWebResponse();
+                            System.out.println(URIstoAttend.get(uriInCatalog).getSparkMethod(request, response));
+                            System.out.println(uriInCatalog);
+                            if(URIstoAttend.get(uriInCatalog).getSparkMethod(request, response).equals(uriInCatalog)){
+                                System.out.println("voy por files");
+                                outputLine = searchFileInPublic(path, responseBody, outputLine, clientSocket);
+                            }else{
+                                URIstoAttend.get(uriInCatalog).getSparkMethod(request, response);
+                                responseBody = URIstoAttend.get(uriInCatalog).getSparkMethod(request, response);
+                                System.out.println("ResponseBody: " + responseBody);
+                                outputLine = builtOutputLine(responseBody);
+                            }
+                        }
                     }
+
                 }
                 if (!in.ready()) {
                     break;
@@ -191,8 +193,31 @@ public class SimulationSparkWeb {
                 + "\r\n";
     }
 
-    public static void get(String uri, SparkMethodGet sparkMethodGet){
-        setURItoAttend(uri);
-        setActionToAttend(sparkMethodGet);
+    private static String searchFileInPublic(URI path, String responseBody, String outputLine, Socket clientSocket) throws IOException {
+        if (path!=null && !getFile(path.toString()).equals("Not Found")) {
+            responseBody = getFile(path.toString());
+            outputLine = builtOutputLine(responseBody);
+        } else if (path!=null && path.toString().split("\\.")[1].equals("jpg") ||
+                path.toString().split("\\.")[1].equals("png")) {
+            OutputStream outputStream = clientSocket.getOutputStream();
+            File file = new File("src/main/resources/public/" + path.getPath());
+            BufferedImage bufferedImage = ImageIO.read(file);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+
+            ImageIO.write(bufferedImage, path.toString().split("\\.")[1], byteArrayOutputStream);
+            outputLine = builtOutputLineImg("");
+            dataOutputStream.writeBytes(outputLine);
+            dataOutputStream.write(byteArrayOutputStream.toByteArray());
+            System.out.println(outputLine);
+
+        }
+        return outputLine;
     }
+
+    public static void get(String uri, SparkMethodGet sparkMethodGet){
+        addURIstoAttend(uri,sparkMethodGet);
+    }
+
+
 }

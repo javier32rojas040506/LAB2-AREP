@@ -7,7 +7,7 @@
 ### Fecha: 9 de Septiembre de 2022
 
 
-[Heroku](https://fierce-wave-42107.herokuapp.com/)
+[Heroku](https://lab02arep.herokuapp.com/)
 
 [GitHub](https://github.com/javier32rojas040506/LAB2-AREP.git)
 

@@ -1,66 +1,92 @@
-package org.example;
+package org.example.reto1;
 
+import java.awt.image.BufferedImage;
 import java.net.*;
 import java.io.*;
-import java.util.logging.Level;
+import java.nio.charset.Charset;
+import java.nio.file.*;
+import org.apache.maven.surefire.shade.org.apache.commons.io.IOUtils;
+
+import javax.imageio.ImageIO;
 
 public class HttpServer {
 public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
-        Integer puerto = new Integer(System.getenv("PORT"));
-        try {
+        //Integer puerto = new Integer(System.getenv("PORT"));
+        Integer puerto =  35000;
+    try {
             serverSocket = new ServerSocket(puerto);
+            System.out.println("server sock"+ serverSocket);
+
         } catch (IOException e) {
-            System.err.println("Could not listen on port: 35006.");
+            System.err.println("Could not listen on port: 35000.");
             System.exit(1);
             }
-        Socket clientSocket = null;
+
         boolean running = true;
+        Socket clientSocket = null;
         while (running) {
+            System.out.println("====================NEW REQ==========================");
             try {
-                System.out.println("Listo para recibir ...");
+                System.out.println("Listo para recibir");
                 clientSocket = serverSocket.accept();
             } catch (IOException e) {
                 System.err.println("Accept failed.");
                 System.exit(1);
             }
-
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(
-                            clientSocket.getInputStream()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String inputLine, outputLine;
             URI path=null;
             outputLine = "";
-            boolean firtsLine=true;
+            boolean firstLine = true;
+
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("Received: " + inputLine);
-                if(firtsLine){
+                if(firstLine){
                     try {
                         path = new URI(inputLine.split(" ")[1]);
                     } catch (URISyntaxException e){
                         //logger.getLogger(HttpServer.class.getName().log(Level.SEVERE,null, e));
                     }
-                    firtsLine = false;
-                    System.out.println("parsed path" + path);
-                    System.out.println("Query" + path.getQuery());
-                    firtsLine = false;
+                    System.out.println("parsed path: " + path);
+                    System.out.println("Query: " + path.getQuery());
+                    firstLine = false;
+                    String responseBody = "";
+                    //end points
+                    if(path.getPath().equals("/")){
+                        responseBody = "Hello From the server";
+                        outputLine = builtOutputLine(responseBody);
+                    }
+                    else if(path.getPath().startsWith("/hello")){
+                        responseBody = "Hello " + path.getQuery().substring(5);
+                        outputLine = builtOutputLine(responseBody);
+                    } else if (!getFile(path.toString()).equals("Not Found")) {
+                        responseBody = getFile(path.toString());
+                        outputLine = builtOutputLine(responseBody);
+                    } else if (path.toString().split("\\.")[1].equals("jpg") ||
+                            path.toString().split("\\.")[1].equals("png")) {
+                        OutputStream outputStream = clientSocket.getOutputStream();
+                        File file = new File("src/main/resources/public/" + path.getPath());
+                        BufferedImage bufferedImage = ImageIO.read(file);
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+
+                        ImageIO.write(bufferedImage, path.toString().split("\\.")[1], byteArrayOutputStream);
+                        outputLine = builtOutputLineImg("");
+                        dataOutputStream.writeBytes(outputLine);
+                        dataOutputStream.write(byteArrayOutputStream.toByteArray());
+                        System.out.println(outputLine);
+                        
+                    } else{
+                        responseBody = getIndexHtml();
+                        outputLine = builtOutputLine(responseBody);
+                    }
+
                 }
                 if (!in.ready()) {
                     break;
                 }
-                String responseBody = "";
-                if(path.getPath().startsWith("/hello")){
-                    responseBody = "Hello" + path.getQuery().substring(5);
-                }
-                else{
-                    responseBody = getIndexHtml();
-                }
-                outputLine = "HTTP/1.1 200 OK \r\n"
-                        + "Content-Type: text/html \r\n"
-                        + "\r\n"
-                        + "\n"
-                        + responseBody;
 
             }
             out.println(outputLine);
@@ -71,7 +97,13 @@ public static void main(String[] args) throws IOException {
         serverSocket.close();
     }
 
-    public static String  getIndexHtml(){
+
+
+    /**
+     * Method that give the base html
+     * @return String with base html
+     */
+    public static String  getIndexHtml()    {
         return  "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "    <head>\n" +
@@ -121,5 +153,39 @@ public static void main(String[] args) throws IOException {
                 "        </script>\n" +
                 "    </body>\n" +
                 "</html>";
+    }
+
+    /**
+     * Method to get a static file instring format
+     * @param route String from the path for find file
+     * @return the data of file in a String
+     */
+    public static String getFile(String route) {
+        Path file = FileSystems.getDefault().getPath("src/main/resources/public", route);
+        Charset charset = Charset.forName("US-ASCII");
+        String web = new String();
+        try (BufferedReader reader = Files.newBufferedReader(file, charset)) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                web+=line+"\n";
+            }
+        } catch (IOException x) {
+            web = "Not Found";
+        }
+        return web;
+    }
+
+    public static String builtOutputLine(String responseBody){
+        return  "HTTP/1.1 200 OK \r\n"
+                + "Content-Type: text/html \r\n"
+                + "\r\n"
+                + "\n"
+                + responseBody;
+    }
+    private static String builtOutputLineImg(String responseBody) {
+        System.out.println("response Body"+ responseBody);
+        return  "HTTP/1.1 200 OK \r\n"
+                + "Content-Type: image/jpg \r\n"
+                + "\r\n";
     }
 }

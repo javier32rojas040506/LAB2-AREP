@@ -54,17 +54,17 @@ public static void main(String[] args) throws IOException {
                     firstLine = false;
                     String responseBody = "";
                     //end points
-                    if(path.getPath().equals("/")){
+                    if(path!=null && path.getPath().equals("/")){
                         responseBody = "Hello From the server";
                         outputLine = builtOutputLine(responseBody);
                     }
-                    else if(path.getPath().startsWith("/hello")){
+                    else if( path!=null && path.getPath().startsWith("/hello")){
                         responseBody = "Hello " + path.getQuery().substring(5);
                         outputLine = builtOutputLine(responseBody);
-                    } else if (!getFile(path.toString()).equals("Not Found")) {
+                    } else if (path!=null && !getFile(path.toString()).equals("Not Found")) {
                         responseBody = getFile(path.toString());
                         outputLine = builtOutputLine(responseBody);
-                    } else if (path.toString().split("\\.")[1].equals("jpg") ||
+                    } else if (path!=null && path.toString().split("\\.")[1].equals("jpg") ||
                             path.toString().split("\\.")[1].equals("png")) {
                         OutputStream outputStream = clientSocket.getOutputStream();
                         File file = new File("src/main/resources/public/" + path.getPath());
